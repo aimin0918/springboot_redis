@@ -1,5 +1,6 @@
 package com.springboot_redis.service.impl;
 
+import com.springboot_redis.util.Key;
 import com.springboot_redis.mapper.Mapper;
 import com.springboot_redis.model.User;
 import com.springboot_redis.responseEntity.ServerResponse;
@@ -44,6 +45,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private Key keys;
+
 
     @Override
     public Map<String, Object> add(User user) {
@@ -68,15 +72,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public Map<String, Object> getById(String id) {
         Map<String, Object> dataMap = new HashMap<String, Object>();
-        String key = "user" + id;
-        Object redisObj = redisTemplate.opsForValue().get(key);
+        //String key = "user" + id;
+        //String key = keys.user(id);
+        Object redisObj = redisTemplate.opsForValue().get(keys.user(id));
         if (redisObj == null) {
             List<User> user = mapper.select(id);
             if (user.size() < 1) {
                 dataMap.put("error", ServerResponse.badRequest());
                 return dataMap;
             }
-            redisTemplate.opsForValue().set(key, user, 300, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(keys.user(id), user, 300, TimeUnit.SECONDS);
             dataMap.put("success", ServerResponse.ok(user));
         } else {
             dataMap.put("success", ServerResponse.ok(redisObj));
